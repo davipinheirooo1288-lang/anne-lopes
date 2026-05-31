@@ -1,0 +1,13 @@
+{
+  "name": "anne-lopes-landing-page",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "validate": "node scripts/validate-site.mjs",
+    "browser-check": "node scripts/browser-check.mjs",
+    "check:js": "node --check public/script.js",
+    "serve": "node scripts/serve-site.mjs",
+    "deploy": "vercel --prod"
+  }
+}
