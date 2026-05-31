@@ -29,12 +29,20 @@ const readPngSize = (path) => {
 const index = read(indexPath);
 const css = read(cssPath);
 const js = read(jsPath);
+const expectedWhatsAppUrl = "https://wa.me/5511974138009?text=Olá,%20Dra.%20Anne.%20Vi%20seu%20site%20e%20gostaria%20de%20falar%20com%20a%20advogada.";
 
 const assetMatches = [...index.matchAll(/src="assets\/([^"]+\.png)"/g)].map((match) => match[1]);
 const uniqueAssets = new Set(assetMatches);
+const webpMatches = [...index.matchAll(/assets\/([^"',\s]+\.webp)/g)].map((match) => match[1]);
+const uniqueWebpAssets = new Set(webpMatches);
+const pictureCount = (index.match(/<picture>/g) || []).length;
 
 if (assetMatches.length !== 10 || uniqueAssets.size !== 10) {
   fail(`Expected 10 unique section images, found ${assetMatches.length} references and ${uniqueAssets.size} unique assets.`);
+}
+
+if (uniqueWebpAssets.size < 40 || pictureCount !== 10) {
+  fail(`Expected responsive WebP sources inside 10 picture elements, found ${uniqueWebpAssets.size} unique WebP assets and ${pictureCount} picture elements.`);
 }
 
 for (const asset of uniqueAssets) {
@@ -47,6 +55,18 @@ for (const asset of uniqueAssets) {
     }
     if (stat.size < 100_000) {
       fail(`${asset} looks too small to be a valid final template asset.`);
+    }
+  } catch (error) {
+    fail(`Could not validate ${asset}: ${error.message}`);
+  }
+}
+
+for (const asset of uniqueWebpAssets) {
+  const assetPath = join(publicDir, "assets", asset);
+  try {
+    const stat = statSync(assetPath);
+    if (stat.size < 5_000) {
+      fail(`${asset} looks too small to be a valid final WebP template asset.`);
     }
   } catch (error) {
     fail(`Could not validate ${asset}: ${error.message}`);
@@ -68,14 +88,20 @@ for (const target of anchorTargets) {
 }
 
 const requiredSnippets = [
-  "Anne Lopes Advocacia",
+  "<title>Anne Lopes Advocacia | Direito Imobiliário em Osasco/SP</title>",
+  "Advogada em Osasco/SP com atuação em Direito Imobiliário",
   "OAB/SP 414.702",
   "5511974138009",
   "LegalService",
+  "Attorney",
+  "FAQPage",
+  "rel=\"canonical\" href=\"https://anne-lopes.vercel.app/\"",
+  "twitter:card",
   "prefers-reduced-motion",
   "overflow-x: hidden",
   "faq-hotspot",
-  "whatsapp-link"
+  "whatsapp-link",
+  expectedWhatsAppUrl
 ];
 
 for (const snippet of requiredSnippets) {
@@ -88,6 +114,10 @@ for (const snippet of requiredSnippets) {
 const whatsappLinks = (index.match(/whatsapp-link/g) || []).length;
 if (whatsappLinks < 18) {
   fail(`Expected at least 18 WhatsApp-enabled hotspots, found ${whatsappLinks}.`);
+}
+
+if (/data-message=/.test(index)) {
+  fail("WhatsApp links must use the canonical requested message instead of per-button data-message overrides.");
 }
 
 if (/C:\\|file:\/\//i.test(index + css + js)) {

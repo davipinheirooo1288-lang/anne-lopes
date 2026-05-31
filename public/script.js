@@ -1,16 +1,8 @@
-const WHATSAPP_NUMBER = "5511974138009";
-
-const encodeWhatsAppMessage = (message) => encodeURIComponent(message.trim());
-
-const buildWhatsAppUrl = (message) => {
-  const text = message ? `?text=${encodeWhatsAppMessage(message)}` : "";
-  return `https://wa.me/${WHATSAPP_NUMBER}${text}`;
-};
+const WHATSAPP_URL = "https://wa.me/5511974138009?text=Olá,%20Dra.%20Anne.%20Vi%20seu%20site%20e%20gostaria%20de%20falar%20com%20a%20advogada.";
 
 const updateWhatsAppLinks = () => {
   document.querySelectorAll(".whatsapp-link").forEach((link) => {
-    const message = link.dataset.message || "Ola, Dra. Anne Lopes. Gostaria de falar sobre meu caso juridico.";
-    link.href = buildWhatsAppUrl(message);
+    link.href = WHATSAPP_URL;
   });
 };
 
@@ -50,7 +42,11 @@ const enableRevealAnimations = () => {
     { rootMargin: "0px 0px -8% 0px", threshold: 0.12 }
   );
 
-  sections.forEach((section) => observer.observe(section));
+  sections.forEach((section) => {
+    if (!section.classList.contains("is-visible")) {
+      observer.observe(section);
+    }
+  });
 };
 
 const enableFaqPopover = () => {

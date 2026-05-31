@@ -35,6 +35,10 @@ img {
   height: auto;
 }
 
+picture {
+  display: block;
+}
+
 .template-site {
   width: 100%;
   overflow-x: clip;
@@ -172,14 +176,10 @@ img {
 
 .js .reveal img {
   opacity: 0;
-  clip-path: inset(var(--clip-start, 0));
   transform-origin: var(--origin, center center);
   transition:
     opacity var(--motion-duration) ease var(--motion-delay),
-    transform var(--motion-duration) var(--motion-ease) var(--motion-delay),
-    filter var(--motion-duration) ease var(--motion-delay),
-    clip-path var(--motion-duration) var(--motion-ease) var(--motion-delay);
-  will-change: opacity, transform, filter, clip-path;
+    transform var(--motion-duration) var(--motion-ease) var(--motion-delay);
 }
 
 .js .motion-hero {
@@ -187,9 +187,13 @@ img {
   --origin: 58% 40%;
 }
 
+.js .motion-hero::before {
+  display: none;
+}
+
 .js .motion-hero img {
-  transform: translate3d(0, 18px, 0) scale(1.018);
-  filter: blur(6px) saturate(0.96) brightness(1.02);
+  opacity: 1;
+  transform: none;
 }
 
 .js .motion-card-stack {
@@ -200,7 +204,6 @@ img {
 
 .js .motion-card-stack img {
   transform: translate3d(-34px, 0, 0) scale(1.006);
-  filter: saturate(0.94) contrast(0.98);
 }
 
 .js .motion-portrait {
@@ -210,7 +213,6 @@ img {
 
 .js .motion-portrait img {
   transform: translate3d(34px, 0, 0) scale(0.992);
-  filter: contrast(0.96) saturate(0.92);
 }
 
 .js .motion-grid {
@@ -221,7 +223,6 @@ img {
 
 .js .motion-grid img {
   transform: translate3d(0, 34px, 0) scale(0.996);
-  filter: brightness(1.04);
 }
 
 .js .motion-timeline {
@@ -232,7 +233,6 @@ img {
 
 .js .motion-timeline img {
   transform: translate3d(0, 22px, 0) scale(1.012);
-  filter: blur(3px) brightness(1.03);
 }
 
 .js .motion-cards {
@@ -242,7 +242,6 @@ img {
 
 .js .motion-cards img {
   transform: translate3d(0, 38px, 0) scale(0.99) rotateX(1.2deg);
-  filter: saturate(0.95);
 }
 
 .js .motion-profile {
@@ -253,7 +252,6 @@ img {
 
 .js .motion-profile img {
   transform: translate3d(-30px, 0, 0) scale(1.008);
-  filter: contrast(0.97) saturate(0.96);
 }
 
 .js .motion-faq {
@@ -264,7 +262,6 @@ img {
 
 .js .motion-faq img {
   transform: translate3d(0, 20px, 0) scale(0.988);
-  filter: contrast(0.95) brightness(1.03);
 }
 
 .js .motion-dark {
@@ -286,7 +283,6 @@ img {
 
 .js .motion-dark img {
   transform: scale(1.026);
-  filter: brightness(0.88) saturate(0.92);
 }
 
 .js .motion-final {
@@ -297,7 +293,6 @@ img {
 
 .js .motion-final img {
   transform: translate3d(0, 28px, 0) scale(0.994);
-  filter: brightness(1.02) saturate(0.95);
 }
 
 .js .reveal.is-visible::before {
@@ -306,9 +301,7 @@ img {
 
 .js .reveal.is-visible img {
   opacity: 1;
-  clip-path: inset(0);
   transform: none;
-  filter: none;
 }
 
 .js .reveal .hotspot {
@@ -431,9 +424,7 @@ img {
 
   .js .reveal img {
     opacity: 1;
-    clip-path: inset(0);
     transform: none;
-    filter: none;
   }
 
   .js .reveal::before {

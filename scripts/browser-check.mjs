@@ -8,6 +8,8 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const reportDir = join(root, "reports", "browser");
 const targetUrl = process.env.TARGET_URL || "http://localhost:4174/";
 const debugPort = Number(process.env.CHROME_DEBUG_PORT || 9223);
+const expectedTitle = "Anne Lopes Advocacia | Direito Imobiliário em Osasco/SP";
+const expectedWhatsAppUrl = "https://wa.me/5511974138009?text=Ol%C3%A1,%20Dra.%20Anne.%20Vi%20seu%20site%20e%20gostaria%20de%20falar%20com%20a%20advogada.";
 
 const chromeCandidates = [
   process.env.CHROME_PATH,
@@ -170,10 +172,15 @@ const runViewportCheck = async ({ name, width, height, mobile = false }) => {
         loadedImages: imgs.filter((img) => img.complete && img.naturalWidth > 0).length,
         hotspots: document.querySelectorAll('.hotspot').length,
         whatsappLinks: document.querySelectorAll('a.whatsapp-link').length,
-        badWhatsappLinks: [...document.querySelectorAll('a.whatsapp-link')].filter((link) => !link.href.includes('wa.me/5511974138009') || !link.href.includes('?text=')).length,
+        badWhatsappLinks: [...document.querySelectorAll('a.whatsapp-link')].filter((link) => link.href !== '${expectedWhatsAppUrl}').length,
         faqButtons: document.querySelectorAll('.faq-hotspot').length,
         faqVisible,
-        schema: Boolean(document.querySelector('script[type="application/ld+json"]')),
+        schema: [...document.querySelectorAll('script[type="application/ld+json"]')].length,
+        faqSchema: [...document.querySelectorAll('script[type="application/ld+json"]')].some((script) => script.textContent.includes('FAQPage')),
+        canonical: document.querySelector('link[rel="canonical"]')?.href,
+        twitterCard: document.querySelector('meta[name="twitter:card"]')?.content,
+        pictures: document.querySelectorAll('picture').length,
+        webpSources: [...document.querySelectorAll('source[type="image/webp"]')].length,
         scrollWidth: doc.scrollWidth,
         clientWidth: doc.clientWidth,
         overflowX: doc.scrollWidth > doc.clientWidth + 1,
@@ -184,11 +191,14 @@ const runViewportCheck = async ({ name, width, height, mobile = false }) => {
 
   const result = metrics.result.value;
 
-  if (result.title !== "Anne Lopes Advocacia | Direito Imobiliario e Civil em Osasco/SP") {
+  if (result.title !== expectedTitle) {
     errors.push(`Unexpected title: ${result.title}`);
   }
   if (result.sections !== 10) errors.push(`Expected 10 sections, found ${result.sections}.`);
   if (result.images !== 10) errors.push(`Expected 10 image elements, found ${result.images}.`);
+  if (result.pictures !== 10 || result.webpSources !== 10) {
+    errors.push(`Expected 10 picture/WebP sources, found ${result.pictures}/${result.webpSources}.`);
+  }
   if (result.loadedImages < 1) errors.push("No above-the-fold images loaded in the browser.");
   if (result.hotspots < 35) errors.push(`Expected at least 35 hotspots, found ${result.hotspots}.`);
   if (result.whatsappLinks < 18 || result.badWhatsappLinks > 0) {
@@ -197,7 +207,13 @@ const runViewportCheck = async ({ name, width, height, mobile = false }) => {
   if (result.faqButtons !== 6 || !result.faqVisible) {
     errors.push(`FAQ interaction failed: ${result.faqButtons} buttons, visible=${result.faqVisible}.`);
   }
-  if (!result.schema) errors.push("JSON-LD schema not found.");
+  if (result.schema < 2 || !result.faqSchema) errors.push("LegalService/FAQ JSON-LD schema not found.");
+  if (result.canonical !== "https://anne-lopes.vercel.app/") {
+    errors.push(`Unexpected canonical URL: ${result.canonical}`);
+  }
+  if (result.twitterCard !== "summary_large_image") {
+    errors.push(`Unexpected Twitter Card: ${result.twitterCard}`);
+  }
   if (result.overflowX) {
     errors.push(`Horizontal overflow detected: scrollWidth=${result.scrollWidth}, clientWidth=${result.clientWidth}.`);
   }
@@ -247,8 +263,11 @@ let exitCode = 0;
 try {
   await waitForJson(`http://127.0.0.1:${debugPort}/json/version`);
   const checks = [
+    await runViewportCheck({ name: "mobile-360", width: 360, height: 800, mobile: true }),
     await runViewportCheck({ name: "desktop-1440", width: 1440, height: 900 }),
-    await runViewportCheck({ name: "mobile-390", width: 390, height: 844, mobile: true })
+    await runViewportCheck({ name: "mobile-390", width: 390, height: 844, mobile: true }),
+    await runViewportCheck({ name: "mobile-430", width: 430, height: 932, mobile: true }),
+    await runViewportCheck({ name: "tablet-768", width: 768, height: 1024, mobile: true })
   ];
 
   const failures = checks.flatMap((check) => check.errors.map((error) => `${check.name}: ${error}`));
